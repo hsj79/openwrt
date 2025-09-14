@@ -236,27 +236,13 @@
 		};
 	};
 
-	wbsys_pins_default: wbsysdefault {
-	};
-
-	wbsys_pins_epa: wbsysepa {
-		pins_cmd_dat {
-			pinmux = <MT7622_PIN_91_TXD4__FUNC_ANTSEL0>,
-			       <MT7622_PIN_92_RXD4__FUNC_ANTSEL1>,
-			       <MT7622_PIN_93_RTS4_N__FUNC_ANTSEL2>,
-			       <MT7622_PIN_94_CTS4_N__FUNC_ANTSEL3>,
-			       <MT7622_PIN_95_PWM1__FUNC_ANTSEL4>,
-			       <MT7622_PIN_96_PWM2__FUNC_ANTSEL5>,
-			       <MT7622_PIN_97_PWM3__FUNC_ANTSEL6>,
-			       <MT7622_PIN_98_PWM4__FUNC_ANTSEL7>,
-			       <MT7622_PIN_99_PWM5__FUNC_ANTSEL8>,
-			       <MT7622_PIN_100_PWM6__FUNC_ANTSEL9>,
-			       <MT7622_PIN_73_SPIC1_CLK__FUNC_ANTSEL12>,
-			       <MT7622_PIN_74_SPIC1_MOSI__FUNC_ANTSEL13>,
-			       <MT7622_PIN_75_SPIC1_MISO__FUNC_ANTSEL14>,
-			       <MT7622_PIN_76_SPIC1_CS__FUNC_ANTSEL15>,
-			       <MT7622_PIN_77_GPIO_D__FUNC_ANTSEL16>,
-			       <MT7622_PIN_22_GPIO_B__FUNC_ANTSEL17>;
+	epa_elna_pins: epa-elna-pins {
+		mux {
+			function = "antsel";
+			groups = "antsel0", "antsel1", "antsel2", "antsel3",
+				"antsel4", "antsel5", "antsel6", "antsel7",
+				"antsel8", "antsel9", "antsel12", "antsel13",
+				"antsel14", "antsel15", "antsel16", "antsel17";
 		};
 	};
 };
@@ -305,7 +291,7 @@
 				reg = <0x140000 0x0080000>;
 			};
 
-			partition@1c0000 {
+			factory: partition@1c0000 {
 				label = "Factory";
 				reg = <0x1c0000 0x0100000>;
 				read-only;
@@ -385,10 +371,10 @@
 	status = "okay";
 };
 
-&wbsys {
-	pinctrl-names = "default", "state_epa";
-	pinctrl-0 = <&wbsys_pins_default>;
-	pinctrl-1 = <&wbsys_pins_epa>;
+&wmac {
+	pinctrl-names = "default";
+	pinctrl-0 = <&epa_elna_pins>;
+	mediatek,mtd-eeprom = <&factory 0x0000>;
 	status = "okay";
 };
 
