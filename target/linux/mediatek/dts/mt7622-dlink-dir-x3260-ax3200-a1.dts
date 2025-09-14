@@ -7,8 +7,8 @@
 #include <dt-bindings/input/input.h>
 
 / {
-	model = "MediaTek MT7622 AX3600 board";
-	compatible = "mediatek,mt7622-ac2600rfb1", "mediatek,mt7622";
+	model = "D-Link DIR-X3260 A1";
+	compatible = "dlink,dir-x3260-a1", "mediatek,mt7622";
 
 	chosen {
 		bootargs = "console=ttyS0,115200n1 loglevel=8 swiotlb=512 \
