@@ -221,21 +221,11 @@
 };
 
 &pio {
-	snand_pins_default: snand@0 {
-		pins_cmd_dat {
-			pinmux = <MT7622_PIN_8_SPI_WP__FUNC_SNFI_WP>,
-				 <MT7622_PIN_9_SPI_HOLD__FUNC_SNFI_HOLD>,
-				 <MT7622_PIN_11_SPI_MOSI__FUNC_SNFI_MOSI>,
-				 <MT7622_PIN_12_SPI_MISO__FUNC_SNFI_MISO>,
-				 <MT7622_PIN_13_SPI_CS__FUNC_SNFI_CS>;
-			input-enable;
-			drive-strength = <MTK_DRIVE_16mA>;
-			bias-pull-up = <MTK_PUPD_SET_R1R0_01>;
-		};
-		pins_clk {
-			pinmux = <MT7622_PIN_10_SPI_CLK__FUNC_SNFI_CLK>;
-			drive-strength = <MTK_DRIVE_16mA>;
-			bias-pull-down = <MTK_PUPD_SET_R1R0_10>;
+	/* Serial NAND is shared pin with SPI-NOR */
+	serial_nand_pins: serial-nand-pins {
+		mux {
+			function = "flash";
+			groups = "snfi";
 		};
 	};
 
@@ -275,10 +265,20 @@
 	status = "okay";
 };
 
-&snand {
-	pinctrl-0 = <&snand_pins_default>;
+&snfi {
+	pinctrl-names = "default";
+	pinctrl-0 = <&serial_nand_pins>;
 	status = "okay";
+
 	flash@0 {
+		compatible = "spi-nand";
+		mediatek,bmt-table-size = <0x1000>;
+		mediatek,bmt-v2;
+		nand-ecc-engine = <&snfi>;
+		reg = <0>;
+		spi-rx-bus-width = <4>;
+		spi-tx-bus-width = <4>;
+
 		partitions {
 			compatible = "fixed-partitions";
 			#address-cells = <1>;
@@ -308,6 +308,21 @@
 			partition@1c0000 {
 				label = "Factory";
 				reg = <0x1c0000 0x0100000>;
+				read-only;
+
+				nvmem-layout {
+					compatible = "fixed-layout";
+					#address-cells = <1>;
+					#size-cells = <1>;
+
+					macaddr_factory_7fff4: macaddr@7fff4 {
+						reg = <0x7fff4 0x6>;
+					};
+
+					macaddr_factory_7fffa: macaddr@7fffa {
+						reg = <0x7fffa 0x6>;
+					};
+				};
 			};
 
 			partition@2C0000 {
