@@ -1,19 +1,27 @@
-// SPDX-License-Identifier: GPL-2.0
-// SPDX-FileCopyrightText: 2017 MediaTek Inc.
+// SPDX-License-Identifier: (GPL-2.0-only OR MIT)
 
 /dts-v1/;
 #include "mt7622.dtsi"
 #include "mt6380.dtsi"
 #include <dt-bindings/gpio/gpio.h>
 #include <dt-bindings/input/input.h>
+#include <dt-bindings/pinctrl/mt65xx.h>
 
 / {
 	model = "D-Link DIR-X3260 A1";
 	compatible = "dlink,dir-x3260-a1", "mediatek,mt7622";
 
+	aliases {
+		serial0 = &uart0;
+		led-boot = &led_power_orange;
+		led-failsafe = &led_power_orange;
+		led-running = &led_power;
+		led-upgrade = &led_power_orange;
+	};
+
 	chosen {
-		bootargs = "console=ttyS0,115200n1 loglevel=8 swiotlb=512 \
-				rootfstype=squashfs";
+		stdout-path = "serial0:115200n8";
+		bootargs = "earlycon=uart8250,mmio32,0x11002000 console=ttyS0,115200n1 swiotlb=512";
 	};
 
 	cpus {
@@ -44,33 +52,42 @@
 		};
 	};
 
-	leds {
+	gpio-leds {
 		compatible = "gpio-leds";
+
+		led_power: power_white {
+			label = "power:white";
+			gpios = <&pio 16 GPIO_ACTIVE_LOW>;
+			default-state = "on";
+		};
+
+		led_power_orange: power_orange {
+			label = "power:orange";
+			gpios = <&pio 19 GPIO_ACTIVE_LOW>;
+			default-state = "off";
+		};
+
+		inet_white {
+			label = "inet:white";
+			gpios = <&pio 20 GPIO_ACTIVE_LOW>;
+			default-state = "off";
+		};
+
+		inet_orange {
+			label = "inet:orange";
+			gpios = <&pio 17 GPIO_ACTIVE_LOW>;
+			default-state = "off";
+		};
 
 		wifi2g {
 			label = "wifi2g";
 			gpios = <&pio 85 GPIO_ACTIVE_LOW>;
+			default-state = "off";
 		};
+	};
 
-		syswhite {
-			label = "sys:white";
-			gpios = <&pio 16 GPIO_ACTIVE_LOW>;
-		};
-
-		sysorange {
-			label = "sys:orange";
-			gpios = <&pio 19 GPIO_ACTIVE_LOW>;
-		};
-
-		wanwhite {
-			label = "wan:white";
-			gpios = <&pio 20 GPIO_ACTIVE_LOW>;
-		};
-
-		wanorange {
-			label = "wan:orange";
-			gpios = <&pio 17 GPIO_ACTIVE_LOW>;
-		};
+	memory {
+		reg = <0 0x40000000 0 0x3F000000>;
 	};
 
 	reg_1p8v: regulator-1p8v {
@@ -89,27 +106,13 @@
 		regulator-boot-on;
 		regulator-always-on;
 	};
-
-	reg_5v: regulator-5v {
-		compatible = "regulator-fixed";
-		regulator-name = "fixed-5V";
-		regulator-min-microvolt = <5000000>;
-		regulator-max-microvolt = <5000000>;
-		regulator-boot-on;
-		regulator-always-on;
-	};
-
-	memory@40000000 {
-		reg = <0 0x40000000 0 0x3F000000>;
-		device_type = "memory";
-	};
 };
 
-&auxadc {
+&bch {
 	status = "okay";
 };
 
-&efuse {
+&btif {
 	status = "okay";
 };
 
@@ -122,8 +125,6 @@
 		compatible = "mediatek,eth-mac";
 		reg = <0>;
 		phy-mode = "2500base-x";
-		nvmem-cells = <&macaddr_factory_28>;
-		nvmem-cell-names = "mac-address";
 
 		fixed-link {
 			speed = <2500>;
@@ -149,31 +150,29 @@
 				#address-cells = <1>;
 				#size-cells = <0>;
 
-				port@0 {
+				wan: port@0 {
 					reg = <0>;
-					label = "lan1";
+					label = "wan";
 				};
 
 				port@1 {
 					reg = <1>;
-					label = "lan2";
+					label = "lan1";
 				};
 
 				port@2 {
 					reg = <2>;
-					label = "lan3";
+					label = "lan2";
 				};
 
 				port@3 {
 					reg = <3>;
-					label = "lan4";
+					label = "lan3";
 				};
 
-				wan: port@4 {
+				port@4 {
 					reg = <4>;
-					label = "wan";
-					nvmem-cells = <&macaddr_factory_22>;
-					nvmem-cell-names = "mac-address";
+					label = "lan4";
 				};
 
 				port@6 {
@@ -193,63 +192,19 @@
 	};
 };
 
-&i2c1 {
+&pcie0 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&pcie0_pins>;
 	status = "okay";
 };
 
-&i2c2 {
+&pcie1 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&pcie1_pins>;
 	status = "okay";
-};
-
-&nor_flash {
-	status = "okay";
-	flash@0 {
-		compatible = "jedec,spi-nor";
-		#address-cells = <1>;
-		#size-cells = <1>;
-		partition@00000 {
-			label = "Preloader";
-			reg = <0x00000 0x0040000>;
-		};
-		partition@40000 {
-			label = "ATF";
-			reg = <0x40000 0x0020000>;
-		};
-		partition@60000 {
-			label = "Bootloader";
-			reg = <0x60000 0x0040000>;
-		};
-		partition@A0000 {
-			label = "Config";
-			reg = <0xA0000 0x0020000>;
-		};
-		partition@C0000 {
-			label = "Factory";
-			reg = <0xC0000 0x0080000>;
-		};
-		partition@E0000 {
-			label = "Kernel";
-			reg = <0x140000 0xEC0000>;
-		};
-	};
 };
 
 &pio {
-	/* Serial NAND is shared pin with SPI-NOR */
-	serial_nand_pins: serial-nand-pins {
-		mux {
-			function = "flash";
-			groups = "snfi";
-		};
-	};
-
-	uart3_pins: uart3-pins {
-		mux {
-			function = "uart";
-			groups = "uart3_1_tx_rx" ;
-		};
-	};
-
 	epa_elna_pins: epa-elna-pins {
 		mux {
 			function = "antsel";
@@ -267,9 +222,85 @@
 		};
 	};
 
+	pcie0_pins: pcie0-pins {
+		mux {
+			function = "pcie";
+			groups = "pcie0_pad_perst",
+				 "pcie0_1_waken",
+				 "pcie0_1_clkreq";
+		};
+	};
+
+	pcie1_pins: pcie1-pins {
+		mux {
+			function = "pcie";
+			groups = "pcie1_pad_perst",
+				 "pcie1_0_waken",
+				 "pcie1_0_clkreq";
+		};
+	};
+
+	pmic_bus_pins: pmic-bus-pins {
+		mux {
+			function = "pmic";
+			groups = "pmic_bus";
+		};
+	};
+
+	/* Serial NAND is shared pin with SPI-NOR */
+	serial_nand_pins: serial-nand-pins {
+		mux {
+			function = "flash";
+			groups = "snfi";
+		};
+
+		conf {
+			groups = "snfi";
+			drive-strength = <MTK_DRIVE_12mA>;
+		};
+	};
+
+	uart0_pins: uart0-pins {
+		mux {
+			function = "uart";
+			groups = "uart0_0_tx_rx" ;
+		};
+	};
+
+	watchdog_pins: watchdog-pins {
+		mux {
+			function = "watchdog";
+			groups = "watchdog";
+		};
+	};
 };
 
-&pwm {
+&pwrap {
+	pinctrl-names = "default";
+	pinctrl-0 = <&pmic_bus_pins>;
+
+	status = "okay";
+};
+
+&sata {
+	status = "disabled";
+};
+
+&sata_phy {
+	status = "disabled";
+};
+
+&slot0 {
+	wifi@0,0 {
+		compatible = "mediatek,mt76";
+		reg = <0x0000 0 0 0 0>;
+		ieee80211-freq-limit = <5000000 6000000>;
+		mediatek,disable-radar-background;
+		mediatek,mtd-eeprom = <&factory 0x5000>;
+	};
+};
+
+&bch {
 	status = "okay";
 };
 
@@ -280,8 +311,6 @@
 
 	flash@0 {
 		compatible = "spi-nand";
-		mediatek,bmt-table-size = <0x1000>;
-		mediatek,bmt-v2;
 		nand-ecc-engine = <&snfi>;
 		reg = <0>;
 		spi-rx-bus-width = <4>;
@@ -301,46 +330,49 @@
 			partition@80000 {
 				label = "ATF";
 				reg = <0x80000 0x0040000>;
+				read-only;
 			};
 
 			partition@c0000 {
 				label = "Bootloader";
 				reg = <0xc0000 0x0080000>;
+				read-only;
 			};
 
 			partition@140000 {
 				label = "Config";
 				reg = <0x140000 0x0080000>;
+				read-only;
 			};
 
 			factory: partition@1c0000 {
 				label = "Factory";
 				reg = <0x1c0000 0x0100000>;
 				read-only;
-
-				nvmem-layout {
-					compatible = "fixed-layout";
-					#address-cells = <1>;
-					#size-cells = <1>;
-
-					macaddr_factory_22: macaddr@22 {
-						reg = <0x22 0x6>;
-					};
-
-					macaddr_factory_28: macaddr@28 {
-						reg = <0x28 0x6>;
-					};
-				};
 			};
 
 			partition@2C0000 {
 				label = "Config2";
 				reg = <0x2C0000 0x40000>;
+				read-only;
 			};
 
 			partition@300000 {
 				label = "firmware";
 				reg = <0x300000 0x2000000>;
+				compatible = "denx,fit";
+				#address-cells = <1>;
+				#size-cells = <1>;
+
+				partition@0 {
+					label = "kernel";
+					reg = <0x00000000 0x00800000>;
+				};
+
+				partition@800000 {
+					label = "ubi";
+					reg = <0x00800000 0x01800000>;
+				};
 			};
 
 			partition@2300000 {
@@ -349,54 +381,59 @@
 			};
 			
 			partition@4300000 {
-				label = "rootfs_data";
+				label = "rootfs_data_stock";
 				reg = <0x4300000 0xA00000>;
+				read-only;
 			};
 
 			partition@4D00000 {
 				label = "Private";
 				reg = <0x4D00000 0x1400000>;
+				read-only;
 			};
 
 			partition@6100000 {
 				label = "mydlink";
 				reg = <0x6100000 0x600000>;
+				read-only;
 			};
 
 			partition@6700000 {
 				label = "myconfig";
 				reg = <0x6700000 0xA00000>;
+				read-only;
 			};
 		};
 	};
 };
 
-&uart0 {
-	status = "okay";
-};
- 
-&uart3 {
-	pinctrl-names = "default";
-	pinctrl-0 = <&uart3_pins>;
-	status = "okay";
+&ssusb {
+	status = "disabled";
 };
 
 &u3phy {
+	status = "disabled";
+};
+
+&uart0 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&uart0_pins>;
 	status = "okay";
 };
 
-&sata {
-	status = "okay";
+&rtc {
+	status = "disabled";
 };
 
-&sata_phy {
+&watchdog {
+	pinctrl-names = "default";
+	pinctrl-0 = <&watchdog_pins>;
 	status = "okay";
 };
 
 &wmac {
+	mediatek,mtd-eeprom = <&factory 0x0>;
 	pinctrl-names = "default";
 	pinctrl-0 = <&epa_elna_pins>;
-	mediatek,mtd-eeprom = <&factory 0x0000>;
 	status = "okay";
 };
-

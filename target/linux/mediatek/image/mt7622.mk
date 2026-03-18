@@ -197,9 +197,7 @@ define Device/dlink_dir-x3260-ax3200-a1
   KERNEL_SIZE := 8192k
   IMAGE_SIZE := 40960k
   UBINIZE_OPTS := -E 5
-  KERNEL_LOADADDR := 0x41080000
-  KERNEL := kernel-bin | lzma | fit lzma $$(KDIR)/image-$$(firstword $$(DEVICE_DTS)).dtb | \
-    append-squashfs4-fakeroot
+  KERNEL := kernel-bin | lzma | fit lzma $$(KDIR)/image-$$(firstword $$(DEVICE_DTS)).dtb
 	IMAGES += factory.bin recovery.bin
   IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
   IMAGE/recovery.bin := append-kernel | pad-to $$(KERNEL_SIZE) | \
