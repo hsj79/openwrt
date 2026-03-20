@@ -20,6 +20,9 @@ smartrg,sdg-841-t6)
 xiaomi,redmi-router-ax6s)
 	ucidef_set_led_netdev "wan" "WAN" "blue:net" "wan"
 	;;
+dlink,dir-x3260-a1)
+	ucidef_set_led_netdev "wan" "WAN" "white:inet" "wan"
+	;;
 esac
 
 board_config_flush
